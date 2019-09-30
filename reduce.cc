@@ -1,4 +1,5 @@
 #include "GaudiKernel/detected.h"
+#include "LHCbMath/SIMDWrapper.h"
 #include <benchmark/benchmark.h>
 #include <boost/random/taus88.hpp>
 #include <execution>
@@ -8,6 +9,18 @@
 #include <vector>
 
 boost::random::taus88 random_gen;
+
+namespace std {
+template <> class numeric_limits<SIMDWrapper::avx2::float_v> {
+public:
+  static SIMDWrapper::avx2::float_v max() {
+    return _mm256_set1_ps(std::numeric_limits<float>::max());
+  }
+  static SIMDWrapper::avx2::float_v min() {
+    return _mm256_set1_ps(std::numeric_limits<float>::min());
+  }
+};
+} // namespace std
 
 template <typename T>
 using reduce_t = decltype(
@@ -24,10 +37,10 @@ template <typename T> auto minval_seq(T &&a, T &&b) {
 
 template <typename T> auto minval_vec(T &&a, T &&b) {
   using std::min;
-  return std::reduce(std::execution::unseq, std::forward<T>(a),
-                     std::forward<T>(b),
-                     std::numeric_limits<typename std::decay_t<T>::value_type>::max(),
-                     [](auto a, auto b) { return min(a, b); });
+  return std::reduce(
+      std::execution::unseq, std::forward<T>(a), std::forward<T>(b),
+      std::numeric_limits<typename std::decay_t<T>::value_type>::max(),
+      [](auto a, auto b) { return min(a, b); });
 }
 
 template <typename T> auto minval_par(T &&a, T &&b) {
@@ -56,11 +69,26 @@ template <typename T> auto minval(T a, T b) {
   }
 }
 
-static void sequential(benchmark::State &state) {
-  std::vector<float> store(256, 0);
-  for (std::size_t i = 0; i < 256; ++i) {
-    store[i] = random_gen();
+template <typename T> auto gen() {
+  if constexpr (std::is_same_v<T, float>) {
+    std::vector<float> store(256, 0);
+    for (std::size_t i = 0; i < 256; ++i) {
+      store[i] = random_gen();
+    }
+    return store;
+  } else {
+    std::vector<SIMDWrapper::avx2::float_v> store;
+    for (std::size_t i = 0; i < 256; ++i) {
+      store.emplace_back(_mm256_set_ps(random_gen(), random_gen(), random_gen(),
+                                       random_gen(), random_gen(), random_gen(),
+                                       random_gen(), random_gen()));
+    }
+    return store;
   }
+}
+
+static void sequential(benchmark::State &state) {
+  auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
         detail::minval_seq(std::begin(store), std::end(store)));
@@ -68,10 +96,7 @@ static void sequential(benchmark::State &state) {
 }
 
 static void serial(benchmark::State &state) {
-  std::vector<float> store(256, 0);
-  for (std::size_t i = 0; i < 256; ++i) {
-    store[i] = random_gen();
-  }
+  auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
         detail::minval_ser(std::begin(store), std::end(store)));
@@ -79,10 +104,7 @@ static void serial(benchmark::State &state) {
 }
 
 static void vectorized(benchmark::State &state) {
-  std::vector<float> store(256, 0);
-  for (std::size_t i = 0; i < 256; ++i) {
-    store[i] = random_gen();
-  }
+  auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
         detail::minval_vec(std::begin(store), std::end(store)));
@@ -90,21 +112,14 @@ static void vectorized(benchmark::State &state) {
 }
 
 static void defaulted(benchmark::State &state) {
-  std::vector<float> store(256, 0);
-  for (std::size_t i = 0; i < 256; ++i) {
-    store[i] = random_gen();
-  }
+  auto store = gen<__m256>();
   for (auto _ : state) {
-    benchmark::DoNotOptimize(
-        minval(std::begin(store), std::end(store)));
+    benchmark::DoNotOptimize(minval(std::begin(store), std::end(store)));
   }
 }
 
 static void parallel(benchmark::State &state) {
-  std::vector<float> store(256, 0);
-  for (std::size_t i = 0; i < 256; ++i) {
-    store[i] = random_gen();
-  }
+  auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
         detail::minval_par(std::begin(store), std::end(store)));
