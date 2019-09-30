@@ -43,14 +43,6 @@ template <typename T> auto minval_vec(T &&a, T &&b) {
       [](const auto& a, const auto& b) { return min(a, b); });
 }
 
-template <typename T> auto minval_par(T &&a, T &&b) {
-  using std::min;
-  return std::reduce(std::execution::par_unseq, std::forward<T>(a),
-                     std::forward<T>(b),
-                     std::numeric_limits<typename T::value_type>::max(),
-                     [](const auto& a, const auto& b) { return min(a, b); });
-}
-
 template <typename T> auto minval_ser(T &&a, T &&b) {
   using std::min;
   return std::accumulate(
@@ -91,7 +83,7 @@ static void sequential(benchmark::State &state) {
   auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
-        detail::minval_seq(std::begin(store), std::end(store)));
+        detail::minval_seq(std::begin(store), std::end(store)).hmin());
   }
 }
 
@@ -99,7 +91,7 @@ static void serial(benchmark::State &state) {
   auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
-        detail::minval_ser(std::begin(store), std::end(store)));
+        detail::minval_ser(std::begin(store), std::end(store)).hmin());
   }
 }
 
@@ -107,22 +99,26 @@ static void vectorized(benchmark::State &state) {
   auto store = gen<__m256>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
-        detail::minval_vec(std::begin(store), std::end(store)));
+        detail::minval_vec(std::begin(store), std::end(store)).hmin());
   }
 }
 
 static void defaulted(benchmark::State &state) {
   auto store = gen<__m256>();
   for (auto _ : state) {
-    benchmark::DoNotOptimize(minval(std::begin(store), std::end(store)));
+    benchmark::DoNotOptimize(minval(std::begin(store), std::end(store)).hmin());
   }
 }
 
-static void parallel(benchmark::State &state) {
+static void transposed(benchmark::State &state) {
   auto store = gen<__m256>();
   for (auto _ : state) {
-    benchmark::DoNotOptimize(
-        detail::minval_par(std::begin(store), std::end(store)));
+    using std::min;
+    benchmark::DoNotOptimize(std::transform_reduce(
+        std::execution::unseq, store.begin(), store.end(),
+        std::numeric_limits<float>::max(),
+        [](const auto& a, const auto& b) { return min(a, b); },
+        [](const auto& v) -> float { return v.hmin(); }));
   }
 }
 
@@ -130,10 +126,6 @@ auto compute_min = [](const std::vector<double> &v) -> double {
   return *(std::min_element(std::begin(v), std::end(v)));
 };
 
-BENCHMARK(parallel)
-    ->ComputeStatistics("min", compute_min)
-    ->UseRealTime()
-    ->ThreadRange(1, 4);
 BENCHMARK(sequential)
     ->ComputeStatistics("min", compute_min)
     ->UseRealTime()
@@ -147,6 +139,10 @@ BENCHMARK(serial)
     ->UseRealTime()
     ->ThreadRange(1, 4);
 BENCHMARK(defaulted)
+    ->ComputeStatistics("min", compute_min)
+    ->UseRealTime()
+    ->ThreadRange(1, 4);
+BENCHMARK(transposed)
     ->ComputeStatistics("min", compute_min)
     ->UseRealTime()
     ->ThreadRange(1, 4);

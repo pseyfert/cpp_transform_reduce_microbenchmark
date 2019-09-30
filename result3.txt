@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------
+Benchmark                               Time             CPU   Iterations
+-------------------------------------------------------------------------
+sequential/real_time/threads:1        246 ns          246 ns      2855129
+sequential/real_time/threads:2        140 ns          280 ns      5012612
+sequential/real_time/threads:4       86.0 ns          310 ns      8187560
+vectorized/real_time/threads:1        278 ns          277 ns      2454811
+vectorized/real_time/threads:2        146 ns          292 ns      4833338
+vectorized/real_time/threads:4        115 ns          420 ns      5909844
+serial/real_time/threads:1            246 ns          243 ns      2839737
+serial/real_time/threads:2            140 ns          278 ns      5013552
+serial/real_time/threads:4           83.1 ns          306 ns      8455160
+defaulted/real_time/threads:1         276 ns          275 ns      2538363
+defaulted/real_time/threads:2         146 ns          288 ns      4760534
+defaulted/real_time/threads:4         118 ns          424 ns      5885556
+transposed/real_time/threads:1        397 ns          392 ns      1804381
+transposed/real_time/threads:2        205 ns          409 ns      3155656
+transposed/real_time/threads:4        199 ns          717 ns      3706860
+
