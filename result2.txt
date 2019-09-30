@@ -1,18 +1,19 @@
 -------------------------------------------------------------------------
 Benchmark                               Time             CPU   Iterations
 -------------------------------------------------------------------------
-parallel/real_time/threads:1         5940 ns         5920 ns       114465
-parallel/real_time/threads:2         4259 ns         7687 ns       140870
-parallel/real_time/threads:4         3455 ns         8386 ns       203116
-sequential/real_time/threads:1        247 ns          246 ns      2755423
-sequential/real_time/threads:2        142 ns          284 ns      4898700
-sequential/real_time/threads:4       89.9 ns          315 ns      7888676
-vectorized/real_time/threads:1        435 ns          433 ns      1575097
-vectorized/real_time/threads:2        227 ns          453 ns      3077702
-vectorized/real_time/threads:4        198 ns          696 ns      3653336
-serial/real_time/threads:1            247 ns          246 ns      2838048
-serial/real_time/threads:2            142 ns          282 ns      4931502
-serial/real_time/threads:4           88.4 ns          311 ns      7918400
-defaulted/real_time/threads:1         438 ns          437 ns      1583803
-defaulted/real_time/threads:2         228 ns          453 ns      3068766
-defaulted/real_time/threads:4         187 ns          662 ns      3199640
+parallel/real_time/threads:1         5738 ns         5602 ns       108357
+parallel/real_time/threads:2         4076 ns         7457 ns       163980
+parallel/real_time/threads:4         3333 ns         8206 ns       196560
+sequential/real_time/threads:1        263 ns          262 ns      2659799
+sequential/real_time/threads:2        143 ns          284 ns      4852740
+sequential/real_time/threads:4       87.2 ns          318 ns      7936588
+vectorized/real_time/threads:1        277 ns          274 ns      2532522
+vectorized/real_time/threads:2        144 ns          286 ns      4876652
+vectorized/real_time/threads:4        114 ns          419 ns      6017988
+serial/real_time/threads:1            246 ns          246 ns      2814732
+serial/real_time/threads:2            144 ns          285 ns      4874534
+serial/real_time/threads:4           87.6 ns          316 ns      8132856
+defaulted/real_time/threads:1         276 ns          273 ns      2547933
+defaulted/real_time/threads:2         145 ns          288 ns      4824598
+defaulted/real_time/threads:4         119 ns          430 ns      5975860
+

@@ -32,7 +32,7 @@ template <typename T> auto minval_seq(T &&a, T &&b) {
   return std::reduce(std::execution::seq, std::forward<T>(a),
                      std::forward<T>(b),
                      std::numeric_limits<typename T::value_type>::max(),
-                     [](auto a, auto b) { return min(a, b); });
+                     [](const auto& a, const auto& b) { return min(a, b); });
 }
 
 template <typename T> auto minval_vec(T &&a, T &&b) {
@@ -40,7 +40,7 @@ template <typename T> auto minval_vec(T &&a, T &&b) {
   return std::reduce(
       std::execution::unseq, std::forward<T>(a), std::forward<T>(b),
       std::numeric_limits<typename std::decay_t<T>::value_type>::max(),
-      [](auto a, auto b) { return min(a, b); });
+      [](const auto& a, const auto& b) { return min(a, b); });
 }
 
 template <typename T> auto minval_par(T &&a, T &&b) {
@@ -48,7 +48,7 @@ template <typename T> auto minval_par(T &&a, T &&b) {
   return std::reduce(std::execution::par_unseq, std::forward<T>(a),
                      std::forward<T>(b),
                      std::numeric_limits<typename T::value_type>::max(),
-                     [](auto a, auto b) { return min(a, b); });
+                     [](const auto& a, const auto& b) { return min(a, b); });
 }
 
 template <typename T> auto minval_ser(T &&a, T &&b) {
@@ -56,7 +56,7 @@ template <typename T> auto minval_ser(T &&a, T &&b) {
   return std::accumulate(
       std::forward<T>(a), std::forward<T>(b),
       std::numeric_limits<typename std::decay_t<T>::value_type>::max(),
-      [](auto a, auto b) { return min(a, b); });
+      [](const auto& a, const auto& b) { return min(a, b); });
 }
 } // namespace detail
 
